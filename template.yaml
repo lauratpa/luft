@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: >
+    luft
+
+    Air quality measurements
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  LuftPushFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: luft/
+      Handler: app.Handler.call
+      Runtime: ruby2.5
+      Environment:
+        Variables:
+          DDB_TABLE: !Ref LuftDataDDBTable
+      Events:
+        PushData:
+          Type: Api
+          Properties:
+            Method: post
+            Path: /luft-push
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref LuftDataDDBTable
+
+  LuftDataDDBTable:
+    Type: AWS::Serverless::SimpleTable
+    TableName: luft-data
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+
+Outputs:
+  LuftDataDDBTable:
+    Description: "Luft Data Dynamo DB table"
+    Value: !GetAtt LuftDataDDBTable.Arn
+
+  LuftPushApi:
+    Description: "API Gateway endpoint URL for pushing measurements"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/luft-push/"
+
+  LuftPushFunction:
+    Description: "Luft Push Lambda Function ARN"
+    Value: !GetAtt LuftPushFunction.Arn
+
+  LuftPushFunctionIamRole:
+    Description: "Implicit IAM Role created for Luft Push function"
+    Value: !GetAtt LuftPushFunctionRole.Arn

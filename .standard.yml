@@ -1,0 +1,4 @@
+ruby_version: 2.5.1
+
+ignore:
+  - 'luft/vendor/**/*'
